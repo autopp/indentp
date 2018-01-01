@@ -35,4 +35,25 @@ case class WhileStmt(cond: Expr, stmts: List[Stmt]) extends Stmt
  */
 case object PassStmt extends Stmt
 
+/*
+  Expr: AssignExpr
+ */
 abstract class Expr extends Ast
+
+/*
+  AssignExpr: Name `=` AssignExpr
+            | LogicalExpr
+ */
+case class AssignExpr(name: String, expr: Expr) extends Expr
+
+/*
+  LogicalExpr: LogicalExpr `==` AddExpr
+             | AddExpr
+
+  AddExpr: AddExpr `+` MulExpr
+         | MulExpr
+
+  MulExpr: MulExpr `*` PrimaryExpr
+         | PrimaryExpr
+ */
+case class class BinOpExpr(op: String, left: Expr, right: Expr) extends Expr
