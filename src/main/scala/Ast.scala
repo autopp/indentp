@@ -53,7 +53,25 @@ case class AssignExpr(name: String, expr: Expr) extends Expr
   AddExpr: AddExpr `+` MulExpr
          | MulExpr
 
-  MulExpr: MulExpr `*` PrimaryExpr
-         | PrimaryExpr
+  MulExpr: MulExpr `*` UnOpExpr
+         | UnOpExpr
+*/
+case class BinOpExpr(op: String, left: Expr, right: Expr) extends Expr
+
+/*
+  UnOpExpr: `-` UnOpExpr
+          | PrimaryExpr
  */
-case class class BinOpExpr(op: String, left: Expr, right: Expr) extends Expr
+case class UnOpExpr(op: String, expr: Expr) extends Expr
+
+/*
+  PrimaryExpr: PrimaryExpr `(` (Expr (`,` Expr)*)? `)`
+             | `(` Expr `)`
+             | Number
+             | Name
+ */
+case class CallExpr(func: Expr, args: List[Expr]) extends Expr
+
+case class Num(v: Int) extends Expr
+
+case class Var(name: String) extends Expr
