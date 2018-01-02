@@ -60,6 +60,7 @@ case class BinOpExpr(op: String, left: Expr, right: Expr) extends Expr
 
 /*
   UnOpExpr: `-` UnOpExpr
+          | `!` UnOpExpr
           | PrimaryExpr
  */
 case class UnOpExpr(op: String, expr: Expr) extends Expr
