@@ -5,7 +5,7 @@ sealed abstract class Ast
 /*
   Program: (Stmt)*
  */
-case class Program(stmts: List[Stmt])
+case class Program(stmts: List[Stmt]) extends Ast
 
 /*
   Stmt: ExprStmt
