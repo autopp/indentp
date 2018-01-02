@@ -39,11 +39,13 @@ class Parser {
   def tokenizeLines(lines: List[String], indentStack: List[Int], buf: List[Token]): Either[String, List[Token]] = {
     lines match {
       case Nil => {
-        Right((EndToken::List.fill(indentStack.size - 1)(DEDENTToken) ++ buf).reverse)
+        Right((EndToken::List.fill(indentStack.size - 1)(DedentToken) ++ buf).reverse)
       }
       case line::rest => {
-        tokenizeLine(line, indentStack, buf)
-        Left("not implemented")
+        tokenizeLine(line, indentStack, buf) match {
+          case Right((indentStack, buf)) => tokenizeLines(rest, indentStack, NewlineToken::buf)
+          case Left(msg) => Left(msg)
+        }
       }
     }
   }
