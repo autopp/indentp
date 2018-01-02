@@ -24,8 +24,10 @@ case object EndToken extends Token("EOF")
 
 class Parser {
   def parse(source: String): Either[String, Ast] = {
-    new Lexer().tokenize(source)
-    Left("not implemented")
+    new Lexer().tokenize(source) match {
+      case Right(tokens) => Left("not implemented")
+      case Left(msg) => Left(msg)
+    }
   }
 }
 
@@ -76,9 +78,9 @@ class Lexer {
       case pattern(indent, body) => {
         tokenizeIndent(indent.size, indentStack, buf) match {
           case Right((indentStack, buf)) => {
-            tokenizeLineBody(body, indentStack, buf) match {
-              case Right((indentStack, buf)) => Right((indentStack, buf))
-              case e => e
+            tokenizeLineBody(body, buf) match {
+              case Right(buf) => Right((indentStack, buf))
+              case Left(e) => Left(e)
             }
           }
           case e => e
@@ -106,7 +108,32 @@ class Lexer {
     }
   }
 
-  def tokenizeLineBody(body: String, indentStack: List[Int], buf: List[Token]): Either[String, (List[Int], List[Token])] = {
-    Left("not implemented")
+  def tokenizeLineBody(body: String, buf: List[Token]): Either[String, (List[Token])] = {
+    if (body.isEmpty) {
+      Right(buf)
+    } else {
+      applyRule(body, rules, buf) match {
+        case Right((rest, buf)) => tokenizeLineBody(rest, buf)
+        case Left(msg) => Left(msg)
+      }
+    }
+  }
+
+  def applyRule(body: String, rules: List[(Regex, String => Option[Token])], buf: List[Token]): Either[String, (String, List[Token])] = {
+    rules match {
+      case Nil => Left(s"cannot recognize `${body.head}`")
+      case (pattern, converter)::restRules => {
+        pattern.findPrefixOf(body) match {
+          case None => applyRule(body, restRules, buf)
+          case Some(matched) => {
+            val restBody = body.drop(matched.length)
+            converter(matched) match {
+              case None => Right((restBody, buf))
+              case Some(token) => Right((restBody, token::buf))
+            }
+          }
+        }
+      }
+    }
   }
 }
