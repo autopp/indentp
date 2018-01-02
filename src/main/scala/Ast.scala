@@ -21,12 +21,12 @@ abstract class Stmt extends Ast
 case class ExprStmt(body: Expr) extends Stmt
 
 /*
-  IfStmt: `if` `(` Expr `)` (Stmt)+
+  IfStmt: `if` Expr `:` INDENT (Stmt)+ UNINDENT
  */
 case class IfStmt(cond: Expr, stmts: List[Stmt]) extends Stmt
 
 /*
-  WhileStmt: `while` `(` Expr `)` (Stmt)+
+  WhileStmt: `while` Expr `:` INDENT (Stmt)+ UNINDENT
  */
 case class WhileStmt(cond: Expr, stmts: List[Stmt]) extends Stmt
 
