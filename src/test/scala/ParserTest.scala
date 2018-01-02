@@ -46,6 +46,13 @@ class ParserTest extends FunSpec {
           parser.parse("x = 42\\nf()`") should equal(Right(Program(List(first, second))))
         }
       }
+
+      describe("with pass stmt") {
+        it("returns PassStmt") {
+          pending
+          parser.parse("pass") should equal(Right(Program(List(PassStmt))))
+        }
+      }
     }
   }
 }
