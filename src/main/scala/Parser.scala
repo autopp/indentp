@@ -52,11 +52,25 @@ class Parser {
       case PassToken::rest => {
         rest match {
           case NewlineToken::rest => Right(PassStmt, rest)
-          case _ => Left(genError("colon", rest))
+          case _ => Left(genError("NEWLINE", rest))
         }
       }
-      case _ => Left("not implemented")
+      case _ => {
+        parseExpr(tokens) match {
+          case Right((expr, rest)) => {
+            rest match {
+              case NewlineToken::rest => Right(ExprStmt(expr), rest)
+              case _ => Left(genError("NEWLINE", rest))
+            }
+          }
+          case Left(msg) => Left(msg)
+        }
+      }
     }
+  }
+
+  def parseExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
+    Left("parseExpr is not implemented")
   }
 
   def genError(expected: String, tokens: List[Token]): String = {
