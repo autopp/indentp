@@ -20,14 +20,31 @@ case object WhileToken extends Token("while")
 case object NewlineToken extends Token("NEWLINE")
 case object IndentToken extends Token("INDENT")
 case object DedentToken extends Token("DEDENT")
-case object EndToken extends Token("EOF")
 
 class Parser {
   def parse(source: String): Either[String, Ast] = {
     new Lexer().tokenize(source) match {
-      case Right(tokens) => Left("not implemented")
+      case Right(tokens) => parseProgram(tokens, Nil)
       case Left(msg) => Left(msg)
     }
+  }
+
+  def parseProgram(tokens: List[Token], buf: List[Stmt]): Either[String, Program] = {
+    tokens match {
+      case Nil => {
+        Right(Program(buf.reverse))
+      }
+      case _ => {
+        parseStmt(tokens) match {
+          case Right((stmt, rest)) => parseProgram(rest, stmt::buf)
+          case Left(msg) => Left(msg)
+        }
+      }
+    }
+  }
+
+  def parseStmt(tokens: List[Token]): Either[String, (Stmt, List[Token])] = {
+    Left("parseStmt is not implemented")
   }
 }
 
@@ -61,7 +78,7 @@ class Lexer {
   def tokenizeLines(lines: List[String], indentStack: List[Int], buf: List[Token]): Either[String, List[Token]] = {
     lines match {
       case Nil => {
-        Right((EndToken::List.fill(indentStack.size - 1)(DedentToken) ++ buf).reverse)
+        Right((List.fill(indentStack.size - 1)(DedentToken) ++ buf).reverse)
       }
       case line::rest => {
         tokenizeLine(line, indentStack, buf) match {
