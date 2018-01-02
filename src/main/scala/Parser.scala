@@ -17,6 +17,7 @@ case object NegOpToken extends Token("-")
 case object NotOpToken extends Token("!")
 case object IfToken extends Token("if")
 case object WhileToken extends Token("while")
+case object PassToken extends Token("pass")
 case object NewlineToken extends Token("NEWLINE")
 case object IndentToken extends Token("INDENT")
 case object DedentToken extends Token("DEDENT")
@@ -47,13 +48,29 @@ class Parser {
 
   def parseStmt(tokens: List[Token]): MayError[(Stmt, List[Token])] = {
     Left("parseStmt is not implemented")
+    tokens match {
+      case PassToken::rest => {
+        rest match {
+          case NewlineToken::rest => Right(PassStmt, rest)
+          case _ => Left(genError("colon", rest))
+        }
+      }
+      case _ => Left("not implemented")
+    }
+  }
+
+  def genError(expected: String, tokens: List[Token]): String = {
+    val actual = tokens match {
+      case token::_ => s"`${token.toString}`"
+      case Nil => "end of input"
+    }
+
+    s"expect ${expected}, but got ${actual}"
   }
 
   class Lexer {
     val rules = List[(Regex, String => Option[Token])](
       ("[ ]".r, (s) => None),
-      ("[0-9]+".r, (s) => Some(NumToken(s))),
-      ("[a-zA-Z_][a-zA-Z_0-9]*".r, (s) => Some(NameToken(s))),
       ("[(]".r, (s) => Some(LeftParenToken)),
       ("[)]".r, (s) => Some(RightParenToken)),
       (",".r, (s) => Some(CommaToken)),
@@ -65,7 +82,10 @@ class Parser {
       ("[-]".r, (s) => Some(NegOpToken)),
       ("[!]".r, (s) => Some(NotOpToken)),
       ("if".r, (s) => Some(IfToken)),
-      ("while".r, (s) => Some(WhileToken))
+      ("while".r, (s) => Some(WhileToken)),
+      ("pass".r, (s) => Some(PassToken)),
+      ("[0-9]+".r, (s) => Some(NumToken(s))),
+      ("[a-zA-Z_][a-zA-Z_0-9]*".r, (s) => Some(NameToken(s)))
     )
 
     def tokenize(source: String): MayError[List[Token]] = {
