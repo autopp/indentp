@@ -1,7 +1,5 @@
 package indentp
 
-import scala.util.matching.Regex
-
 sealed abstract class Token(val text: String)
 case class NumToken(override val text: String) extends Token(text)
 case class NameToken(override val text: String) extends Token(text)
@@ -24,10 +22,12 @@ case object EndToken extends Token("EOF")
 
 class Parser {
   def parse(source: String): Either[String, Ast] = {
-    tokenize(source)
+    new Lexer().tokenize(source)
     Left("not implemented")
   }
+}
 
+class Lexer {
   def tokenize(source: String): Either[String, List[Token]] = {
     // Ignore empty lines
     val emptyPattern = "\\s*$".r
