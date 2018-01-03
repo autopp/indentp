@@ -108,16 +108,11 @@ class Parser {
   }
 
   def parseUnOpExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
+    val opMap = Map[Token, String](NegOpToken -> "-", NotOpToken -> "!")
     tokens match {
-      case NegOpToken::rest => {
+      case token::rest if opMap.contains(token) => {
         parseUnOpExpr(rest) match {
-          case Right((expr, rest)) => Right(UnOpExpr("-", expr), rest)
-          case err => err
-        }
-      }
-      case NotOpToken::rest => {
-        parseUnOpExpr(rest) match {
-          case Right((expr, rest)) => Right(UnOpExpr("!", expr), rest)
+          case Right((expr, rest)) => Right((UnOpExpr(opMap(token), expr), rest))
           case err => err
         }
       }
