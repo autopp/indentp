@@ -108,7 +108,27 @@ class Parser {
   }
 
   def parseUnOpExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
-    Left("UnOpExpr is not implemented")
+    tokens match {
+      case NegOpToken::rest => {
+        parseUnOpExpr(rest) match {
+          case Right((expr, rest)) => Right(UnOpExpr("-", expr), rest)
+          case err => err
+        }
+      }
+      case NotOpToken::rest => {
+        parseUnOpExpr(rest) match {
+          case Right((expr, rest)) => Right(UnOpExpr("!", expr), rest)
+          case err => err
+        }
+      }
+      case _ => {
+        parsePrimaryExpr(tokens)
+      }
+    }
+  }
+
+  def parsePrimaryExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
+    Left("parsePrimaryExpr is not implemented")
   }
 
   def genError(expected: String, tokens: List[Token]): String = {
