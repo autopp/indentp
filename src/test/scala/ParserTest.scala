@@ -72,6 +72,22 @@ class ParserTest extends FunSpec {
           parser.parse(source) should equal(Right(Program(List(expected))))
         }
       }
+
+      describe("with with nested stmt") {
+        it("returns IfStmt") {
+          val source = """
+            |if b1:
+            |  pass
+            |  if b2:
+            |     if b3:
+            |         pass
+            |  pass
+            |""".stripMargin
+
+          val expected = IfStmt(Var("b1"), List(PassStmt, IfStmt(Var("b2"), List(IfStmt(Var("b3"), List(PassStmt)))), PassStmt))
+          parser.parse(source) should equal(Right(Program(List(expected))))
+        }
+      }
     }
   }
 }
