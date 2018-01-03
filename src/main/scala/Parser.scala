@@ -81,9 +81,7 @@ class Parser {
                 case err => err
               }
             }
-            case _ => {
-              Right((prev, tokens))
-            }
+            case _ => Right((prev, tokens))
           }
         }
 
@@ -118,20 +116,35 @@ class Parser {
           case err => err
         }
       }
-      case _ => {
-        parseCallExpr(tokens)
-      }
+      case _ => parseCallExpr(tokens)
     }
   }
 
   def parseCallExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
-    parsePrimaryExpr(tokens) match {
-      case Right((expr, rest)) => {
-        rest match {
-          case LeftParenToken::rest => Left("function call is not implemented")
-          case _ => Right((expr, rest))
-        }
+    def parseArgs(tokens: List[Token], buf: List[Expr]): MayError[(List[Expr], List[Token])] = {
+      parseExpr(tokens) match {
+        case Right((expr, CommaToken::rest)) => parseArgs(rest, expr::buf)
+        case Right((expr, RightParenToken::rest)) => Right((expr::buf).reverse, rest)
+        case Right((expr, rest)) => Left(genError("`,` or `)`", rest))
+        case Left(msg) => Left(msg)
       }
+    }
+
+    def parseCallExprRest(tokens: List[Token], prev: Expr): MayError[(Expr, List[Token])] = {
+      tokens match {
+        case LeftParenToken::RightParenToken::rest => parseCallExprRest(rest, CallExpr(prev, Nil))
+        case LeftParenToken::rest => {
+          parseArgs(rest, Nil) match {
+            case Right((args, rest)) => parseCallExprRest(rest, CallExpr(prev, args))
+            case Left(msg) => Left(msg)
+          }
+        }
+        case _ => Right((prev, tokens))
+      }
+    }
+
+    parsePrimaryExpr(tokens) match {
+      case Right((expr, rest)) => parseCallExprRest(rest, expr)
       case err => err
     }
   }
