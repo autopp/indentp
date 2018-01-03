@@ -47,8 +47,8 @@ class Parser {
   }
 
   def parseStmt(tokens: List[Token]): MayError[(Stmt, List[Token])] = {
-    Left("parseStmt is not implemented")
     tokens match {
+      case IfToken::rest => parseIfStmt(rest)
       case PassToken::rest => {
         rest match {
           case NewlineToken::rest => Right(PassStmt, rest)
@@ -66,6 +66,35 @@ class Parser {
           case Left(msg) => Left(msg)
         }
       }
+    }
+  }
+
+  def parseIfStmt(tokens: List[Token]): MayError[(Stmt, List[Token])] = {
+    parseExpr(tokens) match {
+      case Right((cond, ColonToken::rest)) => {
+        parseBlock(rest) match {
+          case Right((stmts, rest)) => Right((IfStmt(cond, stmts), rest))
+          case Left(msg) => Left(msg)
+        }
+      }
+      case Right((cond, rest)) => Left(genError("`:`", rest))
+      case Left(msg) => Left(msg)
+    }
+  }
+
+  def parseBlock(tokens: List[Token]): MayError[(List[Stmt], List[Token])] = {
+    def parseBlockBody(tokens: List[Token], buf: List[Stmt]): MayError[(List[Stmt], List[Token])] = {
+      parseStmt(tokens) match {
+        case Right((stmt, DedentToken::rest)) => Right((stmt::buf).reverse, rest)
+        case Right((stmt, rest)) => parseBlockBody(rest, stmt::buf)
+        case Left(msg) => Left(msg)
+      }
+    }
+
+    tokens match {
+      case NewlineToken::IndentToken::rest => parseBlockBody(rest, Nil)
+      case NewlineToken::rest => Left(genError("INDENT", rest))
+      case _ => Left(genError("NEWLINE", tokens))
     }
   }
 

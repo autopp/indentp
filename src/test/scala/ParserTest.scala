@@ -7,7 +7,7 @@ class ParserTest extends FunSpec {
     val parser = new Parser
     describe("parse") {
       describe("with `x = 42`") {
-        it("returns AssignStmt") {
+        it("returns AssignExpr") {
           val stmt = ExprStmt(AssignExpr("x", Num(42)))
           parser.parse("x = 42") should equal(Right(Program(List(stmt))))
         }
