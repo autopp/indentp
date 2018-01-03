@@ -47,6 +47,19 @@ class ParserTest extends FunSpec {
           parser.parse("pass") should equal(Right(Program(List(PassStmt))))
         }
       }
+
+      describe("with if stmt") {
+        it("returns IfStmt") {
+          val source = """
+            |if b:
+            |  x = 42
+            |  f()
+            |""".stripMargin
+
+          val expected = IfStmt(Var("b"), List(ExprStmt(AssignExpr("x", Num(42))), ExprStmt(CallExpr(Var("f"), Nil))))
+          parser.parse(source) should equal(Right(Program(List(expected))))
+        }
+      }
     }
   }
 }
