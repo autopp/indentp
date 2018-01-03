@@ -70,6 +70,32 @@ class Parser {
   }
 
   def parseExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
+    type ExprParserFunc = (List[Token]) => MayError[(Expr, List[Token])]
+    def genBinOpExprParser(opToken: Token, opStr: String, parseOperand: ExprParserFunc): ExprParserFunc = {
+      (tokens: List[Token]) => {
+        def parseBinOpExprRest(tokens: List[Token], prev: Expr): MayError[(Expr, List[Token])] = {
+          tokens match {
+            case opToken::rest => {
+              parseOperand(rest) match {
+                case Right((expr, rest)) => parseBinOpExprRest(rest, BinOpExpr(opStr, prev, expr))
+                case err => err
+              }
+            }
+            case _ => Right((prev, tokens))
+          }
+        }
+
+        parseOperand(tokens) match {
+          case Right((expr, rest)) => parseBinOpExprRest(rest, expr)
+          case err => err
+        }
+      }
+    }
+
+    val parseMulExpr = genBinOpExprParser(MulOpToken, "*", parseUnOpExpr)
+    val parseAddExpr = genBinOpExprParser(AddOpToken, "+", parseMulExpr)
+    val parseLogicalExpr = genBinOpExprParser(EqualOpToken, "+", parseAddExpr)
+
     tokens match {
       case NameToken(name)::AssignOpToken::rest => {
         parseExpr(rest) match {
@@ -78,63 +104,6 @@ class Parser {
         }
       }
       case _ => parseLogicalExpr(tokens)
-    }
-  }
-
-  def parseLogicalExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
-    def parseLogicalExprRest(tokens: List[Token], prev: Expr): MayError[(Expr, List[Token])] = {
-      tokens match {
-        case EqualOpToken::rest => {
-          parseAddExpr(rest) match {
-            case Right((expr, rest)) => parseLogicalExprRest(rest, BinOpExpr("==", prev, expr))
-            case err => err
-          }
-        }
-        case _ => Right((prev, tokens))
-      }
-    }
-
-    parseAddExpr(tokens) match {
-      case Right((expr, rest)) => parseLogicalExprRest(rest, expr)
-      case err => err
-    }
-  }
-
-  def parseAddExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
-    def parseAddExprRest(tokens: List[Token], prev: Expr): MayError[(Expr, List[Token])] = {
-      tokens match {
-        case AddOpToken::rest => {
-          parseMulExpr(rest) match {
-            case Right((expr, rest)) => parseAddExprRest(rest, BinOpExpr("+", prev, expr))
-            case err => err
-          }
-        }
-        case _ => Right((prev, tokens))
-      }
-    }
-
-    parseMulExpr(tokens) match {
-      case Right((expr, rest)) => parseAddExprRest(rest, expr)
-      case err => err
-    }
-  }
-
-  def parseMulExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
-    def parseMulExprRest(tokens: List[Token], prev: Expr): MayError[(Expr, List[Token])] = {
-      tokens match {
-        case MulOpToken::rest => {
-          parseUnOpExpr(rest) match {
-            case Right((expr, rest)) => parseMulExprRest(rest, BinOpExpr("*", prev, expr))
-            case err => err
-          }
-        }
-        case _ => Right((prev, tokens))
-      }
-    }
-
-    parseUnOpExpr(tokens) match {
-      case Right((expr, rest)) => parseMulExprRest(rest, expr)
-      case err => err
     }
   }
 
