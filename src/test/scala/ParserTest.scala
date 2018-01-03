@@ -60,6 +60,18 @@ class ParserTest extends FunSpec {
           parser.parse(source) should equal(Right(Program(List(expected))))
         }
       }
+
+      describe("with while stmt") {
+        it("returns IfStmt") {
+          val source = """
+            |while b:
+            |  f()
+            |""".stripMargin
+
+          val expected = WhileStmt(Var("b"), List(ExprStmt(CallExpr(Var("f"), Nil))))
+          parser.parse(source) should equal(Right(Program(List(expected))))
+        }
+      }
     }
   }
 }
