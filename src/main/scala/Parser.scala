@@ -70,7 +70,38 @@ class Parser {
   }
 
   def parseExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
-    Left("parseExpr is not implemented")
+    tokens match {
+      case NameToken(name)::AssignOpToken::rest => {
+        parseExpr(rest) match {
+          case Right((expr, rest)) => Right((AssignExpr(name, expr), rest))
+          case err => err
+        }
+      }
+      case _ => parseLogicalExpr(tokens)
+    }
+  }
+
+  def parseLogicalExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
+    def parseLogicalExprRest(tokens: List[Token], prev: Expr): MayError[(Expr, List[Token])] = {
+      tokens match {
+        case EqualOpToken::rest => {
+          parseAddExpr(rest) match {
+            case Right((expr, rest)) => parseLogicalExprRest(rest, BinOpExpr("==", prev, expr))
+            case err => err
+          }
+        }
+        case _ => Right((prev, tokens))
+      }
+    }
+
+    parseAddExpr(tokens) match {
+      case Right((expr, rest)) => parseLogicalExprRest(rest, expr)
+      case err => err
+    }
+  }
+
+  def parseAddExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
+    Left("parseAddExpr is not implemented")
   }
 
   def genError(expected: String, tokens: List[Token]): String = {
