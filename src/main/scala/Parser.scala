@@ -101,7 +101,45 @@ class Parser {
   }
 
   def parseAddExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
-    Left("parseAddExpr is not implemented")
+    def parseAddExprRest(tokens: List[Token], prev: Expr): MayError[(Expr, List[Token])] = {
+      tokens match {
+        case AddOpToken::rest => {
+          parseMulExpr(rest) match {
+            case Right((expr, rest)) => parseAddExprRest(rest, BinOpExpr("+", prev, expr))
+            case err => err
+          }
+        }
+        case _ => Right((prev, tokens))
+      }
+    }
+
+    parseMulExpr(tokens) match {
+      case Right((expr, rest)) => parseAddExprRest(rest, expr)
+      case err => err
+    }
+  }
+
+  def parseMulExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
+    def parseMulExprRest(tokens: List[Token], prev: Expr): MayError[(Expr, List[Token])] = {
+      tokens match {
+        case MulOpToken::rest => {
+          parseUnOpExpr(rest) match {
+            case Right((expr, rest)) => parseMulExprRest(rest, BinOpExpr("*", prev, expr))
+            case err => err
+          }
+        }
+        case _ => Right((prev, tokens))
+      }
+    }
+
+    parseUnOpExpr(tokens) match {
+      case Right((expr, rest)) => parseMulExprRest(rest, expr)
+      case err => err
+    }
+  }
+
+  def parseUnOpExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
+    Left("UnOpExpr is not implemented")
   }
 
   def genError(expected: String, tokens: List[Token]): String = {
