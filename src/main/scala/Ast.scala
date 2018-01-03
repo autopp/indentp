@@ -61,18 +61,21 @@ case class BinOpExpr(op: String, left: Expr, right: Expr) extends Expr
 /*
   UnOpExpr: `-` UnOpExpr
           | `!` UnOpExpr
-          | PrimaryExpr
+          | CallExpr
  */
 case class UnOpExpr(op: String, expr: Expr) extends Expr
 
 /*
-  PrimaryExpr: PrimaryExpr `(` (Expr (`,` Expr)*)? `)`
-             | `(` Expr `)`
-             | Number
-             | Name
+  CallExpr: CallExpr `(` (Expr (`,` Expr)*)? `)`
+          | PrimaryExpr
  */
 case class CallExpr(func: Expr, args: List[Expr]) extends Expr
 
+/*
+  PrimaryExpr: `(` Expr `)`
+             | Number
+             | Name
+ */
 case class Num(v: Int) extends Expr
 
 case class Var(name: String) extends Expr

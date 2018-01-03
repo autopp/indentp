@@ -75,13 +75,15 @@ class Parser {
       (tokens: List[Token]) => {
         def parseBinOpExprRest(tokens: List[Token], prev: Expr): MayError[(Expr, List[Token])] = {
           tokens match {
-            case opToken::rest => {
+            case token::rest if token == opToken => {
               parseOperand(rest) match {
                 case Right((expr, rest)) => parseBinOpExprRest(rest, BinOpExpr(opStr, prev, expr))
                 case err => err
               }
             }
-            case _ => Right((prev, tokens))
+            case _ => {
+              Right((prev, tokens))
+            }
           }
         }
 
@@ -94,7 +96,7 @@ class Parser {
 
     val parseMulExpr = genBinOpExprParser(MulOpToken, "*", parseUnOpExpr)
     val parseAddExpr = genBinOpExprParser(AddOpToken, "+", parseMulExpr)
-    val parseLogicalExpr = genBinOpExprParser(EqualOpToken, "+", parseAddExpr)
+    val parseLogicalExpr = genBinOpExprParser(EqualOpToken, "==", parseAddExpr)
 
     tokens match {
       case NameToken(name)::AssignOpToken::rest => {
@@ -117,13 +119,40 @@ class Parser {
         }
       }
       case _ => {
-        parsePrimaryExpr(tokens)
+        parseCallExpr(tokens)
       }
     }
   }
 
+  def parseCallExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
+    parsePrimaryExpr(tokens) match {
+      case Right((expr, rest)) => {
+        rest match {
+          case LeftParenToken::rest => Left("function call is not implemented")
+          case _ => Right((expr, rest))
+        }
+      }
+      case err => err
+    }
+  }
+
   def parsePrimaryExpr(tokens: List[Token]): MayError[(Expr, List[Token])] = {
-    Left("parsePrimaryExpr is not implemented")
+    tokens match {
+      case NumToken(s)::rest => Right((Num(s.toInt), rest))
+      case NameToken(s)::rest => Right((Var(s), rest))
+      case LeftParenToken::rest => {
+        parseExpr(rest) match {
+          case Right((expr, rest)) => {
+            rest match {
+              case RightParenToken::rest => Right((expr, rest))
+              case _ => Left(genError("`)`", rest))
+            }
+          }
+          case err => err
+        }
+      }
+      case _ => Left(genError("literal or `(`", tokens))
+    }
   }
 
   def genError(expected: String, tokens: List[Token]): String = {
