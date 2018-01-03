@@ -49,6 +49,7 @@ class Parser {
   def parseStmt(tokens: List[Token]): MayError[(Stmt, List[Token])] = {
     tokens match {
       case IfToken::rest => parseIfStmt(rest)
+      case WhileToken::rest => parseWhileStmt(rest)
       case PassToken::rest => {
         rest match {
           case NewlineToken::rest => Right(PassStmt, rest)
@@ -74,6 +75,19 @@ class Parser {
       case Right((cond, ColonToken::rest)) => {
         parseBlock(rest) match {
           case Right((stmts, rest)) => Right((IfStmt(cond, stmts), rest))
+          case Left(msg) => Left(msg)
+        }
+      }
+      case Right((cond, rest)) => Left(genError("`:`", rest))
+      case Left(msg) => Left(msg)
+    }
+  }
+
+  def parseWhileStmt(tokens: List[Token]): MayError[(Stmt, List[Token])] = {
+    parseExpr(tokens) match {
+      case Right((cond, ColonToken::rest)) => {
+        parseBlock(rest) match {
+          case Right((stmts, rest)) => Right((WhileStmt(cond, stmts), rest))
           case Left(msg) => Left(msg)
         }
       }
